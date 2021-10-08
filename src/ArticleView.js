@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react";
 import {Link} from "react-router-dom";
 import {deliveryClient } from "./config";
+import {resolveItemInRichText} from "./itemResolver";
 
 function ArticleView({match, history}) {
   // Uses the react state hook
@@ -13,6 +14,9 @@ function ArticleView({match, history}) {
       .items()
       .type("article")
       .equalsFilter("elements.url_pattern", slug)
+      .queryConfig({
+        richTextResolver: resolveItemInRichText
+      })
       .toObservable()
       .subscribe((response) => {
         setArticle(response.items[0]);
