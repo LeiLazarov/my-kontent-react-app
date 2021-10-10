@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import {Link} from "react-router-dom";
 import {deliveryClient } from "./config";
 import {resolveItemInRichText} from "./itemResolver";
+import {resolveContentLink} from "./linkResolver";
 
 function ArticleView({match, history}) {
   // Uses the react state hook
@@ -15,7 +16,8 @@ function ArticleView({match, history}) {
       .type("article")
       .equalsFilter("elements.url_pattern", slug)
       .queryConfig({
-        richTextResolver: resolveItemInRichText
+        richTextResolver: resolveItemInRichText,
+        urlSlugResolver: resolveContentLink
       })
       .toObservable()
       .subscribe((response) => {
@@ -34,13 +36,26 @@ function ArticleView({match, history}) {
     return <div>Loading...</div>;
   }
 
+  const handleClick = (event, richTextElement) => {
+  // Checks if the user clicked on a link to a content item.
+  if (event.target.tagName === 'A' && event.target.hasAttribute('data-item-id')) {
+    event.preventDefault();
+    const id = event.target.getAttribute('data-item-id');
+    const link = richTextElement.links.find(link => link.linkId === id);
+    const newPath = resolveContentLink(link).url;
+    if (newPath) history.push(newPath);
+  }
+}
+
   return (
     <div>
-      <Link to='/'>Home</Link>
+      <Link to="/">Home</Link>
       <h1>{article.title.value}</h1>
       <div
         className='article_body'
-        dangerouslySetInnerHTML={{__html: article.body_copy.resolveHtml()}}
+        dangerouslySetInnerHTML={{ __html: article.body_copy.resolveHtml() }}
+        // Registers your custom onClick handler
+        onClick={(event) => handleClick(event, article.body_copy)}
       />
     </div>
   );
